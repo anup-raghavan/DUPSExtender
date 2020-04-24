@@ -62,15 +62,8 @@ void Inverter::onDisconnect(BLEClient* pclient) {
 
 //Advertisement Callaback
 void Inverter::onResult(BLEAdvertisedDevice advertisedDevice) {
-    //Serial.println("Inverter::onResult");
-    //Serial.print("BLE Advertised Device found: ");
     Serial.println(advertisedDevice.toString().c_str());
-    //Serial.print("RSSI: ");
-    //Serial.printf("%ddB\r\n", advertisedDevice.getRSSI()) ;
-    //Serial.printf("Address Type %d\r\n", advertisedDevice.getAddressType());
-
     if(advertisedDevice.getName() == "VG_SMART_BT"){
-        //Serial.println("Found our device");
         BLEDevice::getScan()->stop();
         myDevice = new BLEAdvertisedDevice(advertisedDevice);
         isConnected = false;
@@ -95,24 +88,19 @@ bool Inverter::init(){
         pRemoteRXCharacteristic = pRemoteService->getCharacteristic(BLEUUID("0003cdd1-0000-1000-8000-00805f9b0131"));
         if (pRemoteRXCharacteristic == nullptr) {
             Serial.print("Failed to find our characteristic UUID: ");
-            //Serial.println(charUUIDRX.toString().c_str());
             pClient->disconnect();
             return false;
         }
         
         if(pRemoteRXCharacteristic->canRead()) {
             std::string value = pRemoteRXCharacteristic->readValue();
-            //Serial.print("The characteristic value was: ");
-            //Serial.println(value.c_str());
         }
         
         if(pRemoteRXCharacteristic->canNotify()||pRemoteRXCharacteristic->canIndicate()){
             const uint8_t notifyOn[] = {0x1,0x0};
             //const uint8_t notifyOff[] = {0x0,0x0};
             pRemoteRXCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902))->writeValue((uint8_t*)notifyOn,2,true);
-            //Serial.println("Enabling Notification");
-            //pRemoteCharacteristic->getDescriptor(BLEUUID((uint16_t)0x2902))->writeValue((uint8_t*)notifyOff,2,true);
-                delay(200);
+            delay(200);
             pRemoteRXCharacteristic->registerForNotify(this);
             delay(400);
         }
@@ -121,7 +109,6 @@ bool Inverter::init(){
         pRemoteTXCharacteristic = pRemoteService->getCharacteristic(BLEUUID("0003cdd2-0000-1000-8000-00805f9b0131"));
         if (pRemoteTXCharacteristic == nullptr) {
             Serial.print("Failed to find our characteristic UUID: ");
-            //Serial.println(charUUIDRX.toString().c_str());
             pClient->disconnect();
             return false;
         }
@@ -161,14 +148,6 @@ void Inverter::onNotify(
         if (NULL != pData && length > 0){
             memcpy (respBuf, pData, MIN(10, length));
             semaphoreCmdWait.give();
-            //Serial.print("Notify callback for RX characteristic ");
-            //Serial.print(pBLERemoteCharacteristic->getUUID().toString().c_str());
-            //Serial.print(" of data length ");
-            //Serial.println(length);
-            //Serial.print("Notify data: ");
-            //hexDump (pData, length) ; 
-            //short paramVal = *((short*)(pData+6)) ;
-            //Serial.println(paramVal);
         }
     }
 }
@@ -482,77 +461,40 @@ bool Inverter::readAlarmData(){
     if (ret){
         alarmFlag = ((short)*((short*)(respBuf+6)));
         if ((alarmFlag & 0x1) == 1) {
-            //showViewAnimated((View)this.mWarningContainer, true, getString(2131296849));
             alarmData.overloadCount = 1;
-            /*if (this.mOverLoadCount == 3)
-                showWarningAlert(); */
             alarmData.feedbackFail = 0;
             alarmData.overTemperature = 0;
             alarmData.shortCircuit = 0;
         } else if ((alarmFlag & 0x2) == 2) {
-            //showViewAnimated((View)this.mWarningContainer, true, getString(2131296850));
             alarmData.shortCircuit = 1;
-            /*if (alarmData.shortCircuit == 3)
-            showWarningAlert(); */
             alarmData.feedbackFail = 0;
             alarmData.overloadCount = 0;
             alarmData.shortCircuit = 0;
         } else if ((alarmFlag & 0x4) == 4) {
-        /*showViewAnimated((View)this.mWarningContainer, true, getString(2131296845));
-        if (this.adapter.getItem(this.mViewPager.getCurrentItem()) != null && this.adapter.getItem(this.mViewPager.getCurrentItem()) instanceof StatusFragment)
-            ((StatusFragment)this.adapter.getItem(this.mViewPager.getCurrentItem())).batteryStatusHide(); */
             alarmData.lowBattery = true;
             alarmData.lowBatteryCount = 1 + alarmData.lowBatteryCount;
             resetIHealValues();
         } else if ((alarmFlag & 0x40) == 64) {
-            /*String str;
-            if (this.mProduct != null) {
-            str = this.mProduct.getModelName();
-            } else {
-            str = "";
-            } 
-            if (str.contains(getString(2131296785)) || str.contains(getString(2131296786))) {
-            showViewAnimated((View)this.mWarningContainer, true, getString(2131296843));
-            } else {
-            showViewAnimated((View)this.mWarningContainer, true, getString(2131296846));
-            } */
             alarmData.fuseBlown = true;
-            /*if (this.adapter.getItem(this.mViewPager.getCurrentItem()) instanceof StatusFragment)
-            ((StatusFragment)this.adapter.getItem(this.mViewPager.getCurrentItem())).setData(this.mInverterStatus, this.firstCycleNotCompleted); */
             resetIHealValues();
         } else if ((alarmFlag & 0x80) == 128) {
-            //showViewAnimated((View)this.mWarningContainer, true, getString(2131296839));
             resetIHealValues();
         } else if ((alarmFlag & 0x100) == 256) {
-            //showViewAnimated((View)this.mWarningContainer, true, getString(2131296848));
             alarmData.overTemperature = 1;
-            //if (alarmData.mOverTemperature == 3)
-            //    showWarningAlert(); 
             alarmData.feedbackFail = 0;
             alarmData.overloadCount = 0;
             alarmData.shortCircuit = 0;
         } else if ((alarmFlag & 0x200) == 512) {
-            //showViewAnimated((View)this.mWarningContainer, true, getString(2131296842));
             alarmData.feedbackFail = 1;
-            /*if (this.mFeedbackFail == 3)
-                showWarningAlert(); */
             alarmData.overTemperature = 0;
             alarmData.overloadCount = 0;
             alarmData.shortCircuit = 0;
         } else if ((alarmFlag & 0x800) == 2048) {
             alarmData.batteryCharged = true;
-            /*if ((alarmFlag & 0x1000) == 4096) {
-            showViewAnimated((View)this.mWarningContainer, true, getString(2131296851));
-            } else if ((alarmFlag & 0x1000) != 4096) {
-            showViewAnimated((View)this.mWarningContainer, false, (String)null);
-            this.mWarningContainer.setVisibility(8);
-            } */
             resetIHealValues();
         } else if ((alarmFlag & 0x1000) == 4096) {
-            //showViewAnimated((View)this.mWarningContainer, true, getString(2131296851));
             resetIHealValues();
         } else if ((alarmFlag & 0x4000) == 16384) {
-            //showViewAnimated((View)this.mWarningContainer, true, getString(2131296840));
             resetIHealValues();
         } else {
             alarmData.batteryCharged = false;
@@ -560,18 +502,7 @@ bool Inverter::readAlarmData(){
             alarmData.fuseBlown = false;
             alarmData.lowBatteryCount = 0;
             resetIHealValues();
-            /*if (!this.isBatterySame && !this.skipConnection) {
-            showViewAnimated((View)this.mWarningContainer, true, getString(2131296858));
-            } else {
-            showViewAnimated((View)this.mWarningContainer, false, (String)null);
-            this.mWarningContainer.setVisibility(8);
-            } */
         } 
-        /*if ((paramInt & 0x2000) == 8192) {
-        bool = true;
-        } else {
-        bool = false;
-        }*/
         alarmData.firstCycleNotCompleted = ((alarmFlag & 0x2000) == 8192);
     }
     return ret;
