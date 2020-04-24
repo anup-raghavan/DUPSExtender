@@ -1,5 +1,5 @@
 #include "Arduino.h"
-#include "vguard.h"
+#include "dups.h"
 #include "internal.h"
 
 #define MIN(x,y) ((x)<(y)?(x):(y))

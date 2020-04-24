@@ -2,7 +2,7 @@
 // Import required libraries
 #include <WiFi.h>
 #include <aREST.h>
-#include "vguard.h"
+#include "dups.h"
 #include "secret.h"
 
 // Create aREST instance
