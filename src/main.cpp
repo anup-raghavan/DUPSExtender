@@ -6,7 +6,6 @@
 #include "PubSubClient.h"
 
 Inverter invctl;
-const char* mqtt_server = "192.10.2.126";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -56,7 +55,7 @@ void reconnect() {
     //clientId += String(random(0xffff), HEX);
     //Serial.println("Client ID "+clientId);
     // Attempt to connect
-    if (client.connect(clientId.c_str(), "anupr", "anupr123!")) {
+    if (client.connect(clientId.c_str(), mqtt_usr, mqtt_pwd)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
       client.publish("dups/rd/mv", "0");
