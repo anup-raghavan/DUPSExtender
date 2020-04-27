@@ -145,17 +145,21 @@ void Inverter::onNotify(
     bool isNotify) {
     //Serial.println("Notify callback");
     if (pBLERemoteCharacteristic->getUUID().equals(BLEUUID("0003cdd1-0000-1000-8000-00805f9b0131"))){
-        if (NULL != pData && length > 0){
-            memcpy (respBuf, pData, MIN(10, length));
-            semaphoreCmdWait.give();
+        if (isNotify){
+            if (NULL != pData && length > 0){
+                memcpy (respBuf, pData, MIN(10, length));
+                semaphoreCmdWait.give();
+            }
         }
     }
 }
 
 void Inverter::hexDump (uint8_t *data, size_t length){
-  for (int i = 0; i<length; i++)
-    Serial.printf("0x%02x ", data[i]) ;
-  Serial.println() ;
+    if (NULL == data || length == 0)
+        return ;
+    for (int i = 0; i<length; i++)
+        Serial.printf("0x%02x ", data[i]) ;
+    Serial.println() ;
 }
 
 bool Inverter::refresh(bool full){
@@ -184,6 +188,10 @@ bool Inverter::refresh(bool full){
             readChargingCurrent ();
         }
 
+        if (m_applianceMode){
+            readApplianceModeStatus ();
+        }
+
         if (0 == lastUpdated || full){//Status Params that wont change until initiated by this module
             readBatteryType ();
             readBatteryCount ();
@@ -196,7 +204,7 @@ bool Inverter::refresh(bool full){
             readApplianceModeStatus ();
         }
         calculateBatteryPercent ();
-        Serial.println ("\r\n");
+        //Serial.println ("\r\n");
         lastUpdated = millis();
         return true; 
     }
@@ -225,13 +233,13 @@ void Inverter::calculateBatteryPercent(){
     float batteryLowDischargeFactor = 10.4F * i;
     float batteryFactor = (i * 14);
    
-    Serial.printf ("battery battype[%d] cnt[%d] discharging [%d] charging[%d]\r\n", m_batteryType, m_batteryCount, isDischarging, isCharging);
-    Serial.printf ("batVolt[%.2f] lochfact[%.2f] batFact[%.2f] f3[%.2f] f2[%.2f]\r\n", m_batteryVoltage, batteryLowChargeFactor, batteryFactor, f3, f2);
+    //Serial.printf ("battery battype[%d] cnt[%d] discharging [%d] charging[%d]\r\n", m_batteryType, m_batteryCount, isDischarging, isCharging);
+    //Serial.printf ("batVolt[%.2f] lochfact[%.2f] batFact[%.2f] f3[%.2f] f2[%.2f]\r\n", m_batteryVoltage, batteryLowChargeFactor, batteryFactor, f3, f2);
     if (!m_backupMode) {
         isDischarging = false;
         if (alarmData.batteryCharged){
             m_chargingPercent = 100.0F;
-            Serial.printf ("1. [%d]", m_chargingPercent);
+            //Serial.printf ("1. [%d]", m_chargingPercent);
             return; 
         }
         if (f1 < batteryLowChargeFactor)
@@ -241,20 +249,20 @@ void Inverter::calculateBatteryPercent(){
             int i2 = getMaskedBattPercentage(n);
             m_chargingPercent = i2;
             dischargingPer = i2;
-            Serial.printf ("2. [%d]", m_chargingPercent);
+            //Serial.printf ("2. [%d]", m_chargingPercent);
             return;
         } 
         if (n > m_chargingPercent) {
             int i2 = getMaskedBattPercentage(n);
             m_chargingPercent = i2;
             dischargingPer = i2;
-            Serial.printf ("3. [%d]", m_chargingPercent);
+            //Serial.printf ("3. [%d]", m_chargingPercent);
             return;
         } 
         int i1 = chargingPer;
         dischargingPer = i1;
         m_chargingPercent = i1;
-        Serial.printf ("4. [%d]", m_chargingPercent);
+        //Serial.printf ("4. [%d]", m_chargingPercent);
         return;
     } 
     isCharging = false;
@@ -266,20 +274,20 @@ void Inverter::calculateBatteryPercent(){
         int n = getMaskedBattPercentage(k);
         chargingPer = n;
         m_dischargingPercent = n;
-        Serial.printf ("5. [%d]", m_dischargingPercent);
+        //Serial.printf ("5. [%d]", m_dischargingPercent);
         return ;
     } 
     if (k < dischargingPer) {
         int n = getMaskedBattPercentage(k);
         chargingPer = n;
         m_dischargingPercent = n;
-        Serial.printf ("6. [%d]", m_dischargingPercent);
+        //Serial.printf ("6. [%d]", m_dischargingPercent);
         return;
     } 
     int m = dischargingPer;
     chargingPer = m;
     m_dischargingPercent = m;
-    Serial.printf ("7. [%d]", m_dischargingPercent);
+    //Serial.printf ("7. [%d]", m_dischargingPercent);
     return ;
 }
 
@@ -411,30 +419,32 @@ bool Inverter::readChargingCurrent(){
     return ret;
 }
 bool Inverter::readLoadPercentage(){
-    bool ret = sendCommand (CMD_GET_BATTERY_COUNT) ;
+    bool ret = sendCommand (CMD_GET_LOAD_PERCENT) ;
     if (ret){
-        m_batteryCount = ((short)*((short*)(respBuf+6)));
+        m_loadPercent = ((short)*((short*)(respBuf+6)));
     }
     return ret;
 }
 bool Inverter::readCutoffStatus(){
-    bool ret = sendCommand (CMD_GET_BATTERY_COUNT) ;
+    bool ret = sendCommand (CMD_GET_CUTOFF_STATUS) ;
     if (ret){
-        m_batteryCount = ((short)*((short*)(respBuf+6)));
+        m_forcedCutOff = ((short)*((short*)(respBuf+6)));
     }
     return ret;
 }
+
 bool Inverter::readTimeToResume(){
-    bool ret = sendCommand (CMD_GET_BATTERY_COUNT) ;
+    bool ret = sendCommand (CMD_GET_CUTOFF_TIME) ;
     if (ret){
-        m_batteryCount = ((short)*((short*)(respBuf+6)));
+        m_timeToResume = ((short)*((short*)(respBuf+6)));
     }
     return ret;
 }
+
 bool Inverter::readApplianceModeStatus(){
-    bool ret = sendCommand (CMD_GET_BATTERY_COUNT) ;
+    bool ret = sendCommand (CMD_GET_APPL_MODE_STATUS) ;
     if (ret){
-        m_batteryCount = ((short)*((short*)(respBuf+6)));
+        m_applianceMode = ((bool)*((short*)(respBuf+6)));
     }
     return ret;
 }
@@ -504,6 +514,101 @@ bool Inverter::readAlarmData(){
             resetIHealValues();
         } 
         alarmData.firstCycleNotCompleted = ((alarmFlag & 0x2000) == 8192);
+    }
+    return ret;
+}
+
+bool Inverter::setRegulatorLevel (byte level){
+    if (level < 1 && level > 7)
+        return false ;
+    bool ret = sendCommand (CMD_SET_REGULATOR_LEVEL0+level) ;
+    if (ret){
+        if (0 == memcmp (invCmd[CMD_SET_REGULATOR_LEVEL0+level], respBuf, 6) && 0x55aa == ((short)*((short*)(respBuf+6)))){
+            m_regulatorLevel = level ;
+            return true ;
+        }else{
+            return false;
+        }
+    }
+    return ret;
+}
+
+bool Inverter::setCutOffTime (byte cutOffTm){
+    bool ret = false ;
+    int cmd = 0;
+    if ((m_forcedCutOff && 0 != cutOffTm) || (!m_forcedCutOff && 0 == cutOffTm))
+        return false;
+    switch (cutOffTm){
+        case 0:
+            cmd = CMD_SET_CUTOFF_TIME_0M;
+            break;
+        case 30:
+            cmd = CMD_SET_CUTOFF_TIME_30M;
+            break;
+        case 60:
+            cmd = CMD_SET_CUTOFF_TIME_60M;
+            break;
+        case 120:
+            cmd = CMD_SET_CUTOFF_TIME_120M;
+            break;
+    }
+    if (cmd != 0){
+        ret = sendCommand (cmd) ;
+        if (0 == memcmp (invCmd[cmd], respBuf, 6) && 0x55aa == ((short)*((short*)(respBuf+6)))){
+            m_timeToResume = cutOffTm ;
+            if (cutOffTm == 0){
+                m_forcedCutOff = false;
+            }else{
+                ret = sendCommand (CMD_SET_CUTOFF_ON) ;
+                if (0 == memcmp (invCmd[CMD_SET_CUTOFF_ON], respBuf, 6) && 0x55aa == ((short)*((short*)(respBuf+6)))){
+                    m_forcedCutOff = true;
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+        }else{
+            return false;
+        }
+    }
+    return ret;
+}
+
+bool Inverter::setApplianceMode (bool enable){
+    bool ret = sendCommand (enable?CMD_SET_APPL_MODE_ON:CMD_SET_APPL_MODE_OFF) ;
+    if (ret){
+        if (0 == memcmp (invCmd[enable?CMD_SET_APPL_MODE_ON:CMD_SET_APPL_MODE_OFF], respBuf, 6) && 0x55aa == ((short)*((short*)(respBuf+6)))){
+            m_applianceMode = enable ;
+            return true ;
+        }else{
+            return false;
+        }
+    }
+    return ret;
+}
+
+bool Inverter::setUPSMode (bool enable){
+    bool ret = sendCommand (enable?CMD_SET_POWER_MODE_UPS:CMD_SET_POWER_MODE_NORMAL) ;
+    if (ret){
+        if (0 == memcmp (invCmd[enable?CMD_SET_POWER_MODE_UPS:CMD_SET_POWER_MODE_NORMAL], respBuf, 6) && 0x55aa == ((short)*((short*)(respBuf+6)))){
+            m_UPSMode = enable ;
+            return true ;
+        }else{
+            return false;
+        }
+    }
+    return ret;
+}
+
+bool Inverter::setTurboCharging (bool enable){
+    bool ret = sendCommand (enable?CMD_SET_TURBO_CHG_ON:CMD_SET_TURBO_CHG_OFF) ;
+    if (ret){
+        if (0 == memcmp (invCmd[enable?CMD_SET_TURBO_CHG_ON:CMD_SET_TURBO_CHG_OFF], respBuf, 6) && 0x55aa == ((short)*((short*)(respBuf+6)))){
+            m_turboCharge = enable ;
+            return true ;
+        }else{
+            return false;
+        }
     }
     return ret;
 }

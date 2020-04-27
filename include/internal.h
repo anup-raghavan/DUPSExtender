@@ -14,7 +14,7 @@
 #define CMD_SET_REGULATOR_LEVEL4    13 //210v
 #define CMD_SET_REGULATOR_LEVEL5    14 //220v
 #define CMD_SET_REGULATOR_LEVEL6    15 //230v
-#define CMD_SET_REGULATOR_LEVEL7    16 //239v <-- Never go here (Forbidden)
+#define CMD_SET_REGULATOR_LEVEL7    16 //240v <-- Never go here (Forbidden)
 #define CMD_GET_INV_SWITCH_STATUS   17 //boolean
 #define CMD_SET_INV_SWITCH_ON       18
 #define CMD_SET_INV_SWITCH_OFF      19

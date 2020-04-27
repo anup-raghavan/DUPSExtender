@@ -41,6 +41,12 @@ class Inverter : public BLERCCallbacks, public BLEClientCallbacks, public BLEAdv
     byte m_batteryType;
     bool m_backupMode;
 
+    bool setRegulatorLevel (byte level);
+    bool setCutOffTime (byte cutOffTm);
+    bool setApplianceMode (bool enable);
+    bool setUPSMode (bool enable);
+    bool setTurboCharging (bool enable);
+
     bool sendCommand (int cmd, bool log=false, uint32_t tout=150, size_t length=8);
 
     private:
