@@ -1,4 +1,5 @@
-/*MIT License
+/*
+MIT License
 
 Copyright (c) 2020 Anup
 
@@ -206,6 +207,8 @@ bool Inverter::refresh(bool full){
                 readTimeToResume ();
             }
         }else{
+            m_loadCurrent = 0;
+            m_loadPercent = 0;
             isCharging = true ;
             readChargingCurrent ();
         }
@@ -362,7 +365,7 @@ bool Inverter::readSystemTemperature(){
     bool ret = sendCommand (CMD_GET_SYS_TEMPERATURE) ;
     if (ret){
         m_sysTemperature = (float)(((float)*((short*)(respBuf+6)))/10.0f);
-        m_sysTemperature = (m_sysTemperature-32.0F) * 5.0F/9.0F ;
+        m_sysTemperature = (m_sysTemperature-32.0F) * (5.0F/9.0F) ;
     }
     return ret;
 }
@@ -536,8 +539,33 @@ bool Inverter::readAlarmData(){
             resetIHealValues();
         } 
         alarmData.firstCycleNotCompleted = ((alarmFlag & 0x2000) == 8192);
+        updateStatus (alarmFlag);
     }
     return ret;
+}
+
+#define STATUS_SHORT_CIRCUIT            0x0001
+#define STATUS_LOW_BATTERY              0x0002
+#define STATUS_MCB_TRIPPED              0x0004
+#define STATUS_FEEDBACK                 0x0008
+#define STATUS_OVER_TEMPERATURE         0x0010
+#define STATUS_FEEDBACK_FAIL            0x0020
+#define STATUS_BATTERY_CHARGED          0x0040
+#define STATUS_WATER_TOPPING_REQUIRED   0x0080
+#define STATUS_BATTERY_HIGH             0x0100
+#define STATUS_OVERLOAD                 0x0200
+
+void Inverter::updateStatus (short status){
+    m_alarmStatus = ((status & 0x1) == 1) ? m_alarmStatus | STATUS_OVERLOAD : m_alarmStatus & ~(STATUS_OVERLOAD);
+    m_alarmStatus = ((status & 0x2) == 2) ? m_alarmStatus | STATUS_SHORT_CIRCUIT : m_alarmStatus & ~(STATUS_SHORT_CIRCUIT);
+    m_alarmStatus = ((status & 0x4) == 4) ? m_alarmStatus | STATUS_LOW_BATTERY : m_alarmStatus & ~(STATUS_LOW_BATTERY);
+    m_alarmStatus = ((status & 0x40) == 64) ? m_alarmStatus | STATUS_MCB_TRIPPED : m_alarmStatus & ~(STATUS_MCB_TRIPPED);
+    m_alarmStatus = ((status & 0x80) == 128) ? m_alarmStatus | STATUS_FEEDBACK : m_alarmStatus & ~(STATUS_FEEDBACK);
+    m_alarmStatus = ((status & 0x100) == 256) ? m_alarmStatus | STATUS_OVER_TEMPERATURE : m_alarmStatus & ~(STATUS_OVER_TEMPERATURE);
+    m_alarmStatus = ((status & 0x200) == 512) ? m_alarmStatus | STATUS_FEEDBACK_FAIL : m_alarmStatus & ~(STATUS_FEEDBACK_FAIL);
+    m_alarmStatus = ((status & 0x800) == 2048) ? m_alarmStatus | STATUS_BATTERY_CHARGED : m_alarmStatus & ~(STATUS_BATTERY_CHARGED);
+    m_alarmStatus = ((status & 0x1000) == 4096) ? m_alarmStatus | STATUS_WATER_TOPPING_REQUIRED : m_alarmStatus & ~(STATUS_WATER_TOPPING_REQUIRED);
+    m_alarmStatus = ((status & 0x4000) == 16384) ? m_alarmStatus | STATUS_BATTERY_HIGH : m_alarmStatus & ~(STATUS_BATTERY_HIGH);
 }
 
 bool Inverter::setRegulatorLevel (byte level){

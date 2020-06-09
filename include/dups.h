@@ -22,6 +22,18 @@ SOFTWARE.*/
 
 #include "BLEDevice.h"
 
+#define STATUS_OVERLOAD                 0x0000
+#define STATUS_SHORT_CIRCUIT            0x0001
+#define STATUS_LOW_BATTERY              0x0002
+#define STATUS_MCB_TRIPPED              0x0004
+#define STATUS_FEEDBACK                 0x0008
+#define STATUS_OVER_TEMPERATURE         0x0010
+#define STATUS_FEEDBACK_FAIL            0x0020
+#define STATUS_BATTERY_CHARGING         0x0040
+#define STATUS_BATTERY_CHARGED          0x0080
+#define STATUS_WATER_TOPPING_REQUIRED   0x0100
+#define STATUS_BATTERY_HIGH             0x0200
+
 struct __alarm_data{
     byte overloadCount;
     byte overTemperature;
@@ -62,6 +74,7 @@ class Inverter : public BLERCCallbacks, public BLEClientCallbacks, public BLEAdv
     bool m_applianceMode;
     byte m_batteryType;
     bool m_backupMode;
+    short m_alarmStatus;
 
     bool setRegulatorLevel (byte level);
     bool setCutOffTime (byte cutOffTm);
@@ -108,6 +121,7 @@ class Inverter : public BLERCCallbacks, public BLEClientCallbacks, public BLEAdv
     bool init();
     void resetIHealValues();
     int getMaskedBattPercentage (int percent);
+    void updateStatus (short status);
     void onNotify(BLERemoteCharacteristic* pBLERemoteCharacteristic, uint8_t* pData, size_t length, bool isNotify);
     //BLE Client Callback
     void onConnect(BLEClient* pclient);

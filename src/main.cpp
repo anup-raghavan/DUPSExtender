@@ -67,6 +67,10 @@ void reconnect() {
       client.publish("dups/rd/ups", "0");
       client.publish("dups/rd/tch", "0");
       client.publish("dups/rd/bkt", "0");
+      client.publish("dups/rd/st", "0");
+      client.publish("dups/rd/als", "0");
+      client.publish("dups/rd/lc", "0");
+      client.publish("dups/rd/lp", "0");
 
       // ... and resubscribe
       client.subscribe("dups/ctl/ipsw"); //Inverter Power Switch
@@ -134,6 +138,14 @@ void loop() {
     client.publish("dups/rd/tch", msg);
     snprintf (msg, 50, "%.2f", invctl.m_backupTime);
     client.publish("dups/rd/bkt", msg);
+    snprintf (msg, 50, "%.2f", invctl.m_sysTemperature);
+    client.publish("dups/rd/st", msg);
+    snprintf (msg, 50, "%d", invctl.m_alarmStatus);
+    client.publish("dups/rd/als", msg);
+    snprintf (msg, 50, "%.2f", invctl.m_loadCurrent);
+    client.publish("dups/rd/lc", msg);
+    snprintf (msg, 50, "%.2f", invctl.m_loadPercent);
+    client.publish("dups/rd/lp", msg);
   }
 
   if (!client.connected()) {
