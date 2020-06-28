@@ -152,6 +152,7 @@ void loop() {
     reconnect();
   }
   client.loop();
+  delay(500);
 
   /*long now = millis();
   if (now - lastMsg > 6000) {

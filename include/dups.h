@@ -82,7 +82,7 @@ class Inverter : public BLERCCallbacks, public BLEClientCallbacks, public BLEAdv
     bool setUPSMode (bool enable);
     bool setTurboCharging (bool enable);
 
-    bool sendCommand (int cmd, bool log=false, uint32_t tout=150, size_t length=8);
+    bool sendCommand (int cmd, bool log=false, uint32_t tout=350, size_t length=8);
 
     private:
     bool readMainsVoltage();            //Refreshed
