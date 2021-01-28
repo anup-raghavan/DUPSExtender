@@ -1,3 +1,2 @@
 # DUPSExtender
-
-Code to extend VGuard DUPS control over wifi
+ESP32 based project to extend VGuard DUPS control and notifcation over wifi
