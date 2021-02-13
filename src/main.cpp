@@ -5,6 +5,7 @@
 #include "secret.h"
 #include "PubSubClient.h"
 
+#define DEVICE_NAME "DUPS-CONTROLLER"
 Inverter invctl;
 
 WiFiClient espClient;
@@ -47,8 +48,24 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void reconnect() {
-  // Loop until we're reconnected
+// Loop until we're reconnected
   while (!client.connected()) {
+    //Check Wifi
+    while (WiFi.status() != WL_CONNECTED){
+        int retCount = 0;
+        Serial.print("Attempting WIFI connection");
+        WiFi.setHostname(DEVICE_NAME);
+        WiFi.begin(ssid, password);
+        while (WiFi.status() != WL_CONNECTED && retCount < 5) {
+            delay(1000);
+            Serial.print(".");
+            retCount++;
+        }
+        delay(5000);
+    }
+    Serial.print(F("[WIFI] Connected: "));
+    Serial.print(WiFi.localIP());
+
     Serial.print("Attempting MQTT connection...");
     // Create a random client ID
     String clientId = "DUPS-dcbcca69-9c41-4a4d-ad38-eace60ca34db";
@@ -96,6 +113,7 @@ void setup()
   Serial.begin(115200);
 
   // Connect to WiFi
+  WiFi.setHostname(DEVICE_NAME);
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
