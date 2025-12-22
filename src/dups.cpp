@@ -26,7 +26,7 @@ SOFTWARE.*/
 #include "internal.h"
 
 #define MIN(x,y) ((x)<(y)?(x):(y))
-#define REFRESH_INTERVAL    5000
+#define REFRESH_INTERVAL    4000
 
 Inverter::Inverter(){
     isConnected = false;
@@ -36,6 +36,7 @@ Inverter::Inverter(){
     respBuf = new byte[10];
     isCharging = true ;
     isDischarging = true;
+    backupSwitchTS = 0;
     alarmData.batteryCharged = false;
     alarmData.feedbackFail = 0;
     alarmData.firstCycleNotCompleted = true;
@@ -199,6 +200,10 @@ bool Inverter::refresh(bool full){
         readSystemTemperature ();
         
         if (m_backupMode /*0 == m_mainsVoltage*/){//parameters to be read when on backup
+            if (backupSwitchTS == 0){//Record power failure time
+                backupSwitchTS = millis()/1000; //In seconds
+            }
+            m_backupSince = (millis()/1000)-backupSwitchTS;
             isDischarging = true ;
             readLoadPercentage ();
             readLoadCurrent ();
@@ -206,9 +211,12 @@ bool Inverter::refresh(bool full){
             if (m_forcedCutOff){
                 readTimeToResume ();
             }
+            
         }else{
             m_loadCurrent = 0;
             m_loadPercent = 0;
+            backupSwitchTS = 0;
+            //m_backupSince = 0;
             isCharging = true ;
             readChargingCurrent ();
         }

@@ -21,7 +21,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
 #include "BLEDevice.h"
-
+#ifndef __DUPS_H_
+#define __DUPS_H_
 #define STATUS_OVERLOAD                 0x0000
 #define STATUS_SHORT_CIRCUIT            0x0001
 #define STATUS_LOW_BATTERY              0x0002
@@ -74,6 +75,7 @@ class Inverter : public BLERCCallbacks, public BLEClientCallbacks, public BLEAdv
     bool m_applianceMode;
     byte m_batteryType;
     bool m_backupMode;
+    int m_backupSince;
     short m_alarmStatus;
 
     bool setRegulatorLevel (byte level);
@@ -118,6 +120,7 @@ class Inverter : public BLERCCallbacks, public BLEClientCallbacks, public BLEAdv
     int chargingPer;
     int dischargingPer;
     uint32_t lastUpdated;
+    int backupSwitchTS;
     bool init();
     void resetIHealValues();
     int getMaskedBattPercentage (int percent);
@@ -135,3 +138,4 @@ class Inverter : public BLERCCallbacks, public BLEClientCallbacks, public BLEAdv
     byte *respBuf;
     byte curCmd;
 };
+#endif /*__DUPS_H_*/

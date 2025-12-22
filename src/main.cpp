@@ -84,6 +84,7 @@ void reconnect() {
       client.publish("dups/rd/ups", "0");
       client.publish("dups/rd/tch", "0");
       client.publish("dups/rd/bkt", "0");
+      client.publish("dups/rd/bks", "0");
       client.publish("dups/rd/st", "0");
       client.publish("dups/rd/als", "0");
       client.publish("dups/rd/lc", "0");
@@ -133,6 +134,8 @@ void loop() {
   if (invctl.refresh () && client.connected()){
     snprintf (msg, 50, "%d", invctl.m_backupMode);
     client.publish("dups/rd/bkm", msg);
+    snprintf (msg, 50, "%d", invctl.m_backupSince);
+    client.publish("dups/rd/bks", msg);
     snprintf (msg, 50, "%.2f", invctl.m_mainsVoltage);
     client.publish("dups/rd/mv", msg);
     snprintf (msg, 50, "%.2f", invctl.m_batteryVoltage);
