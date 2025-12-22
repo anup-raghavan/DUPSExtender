@@ -14,6 +14,39 @@ long lastMsg = 0;
 char msg[50];
 int value = 0;
 
+/**
+ * @file main.cpp
+ * @brief Entry point for DUPSExtender.
+ * 
+ * Initializes WiFi, MQTT, and the Inverter controller.
+ * Runs the main loop to process MQTT messages and publish telemetry.
+ */
+
+// Import required libraries
+#include <WiFi.h>
+#include "dups.h"
+#include "secret.h"
+#include "PubSubClient.h"
+
+#define DEVICE_NAME "DUPS-CONTROLLER"
+Inverter invctl; /// Global instance of the Inverter controller
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+long lastMsg = 0;
+char msg[50];
+int value = 0;
+
+/**
+ * @brief MQTT Callback function.
+ * 
+ * Handles incoming messages from subscribed topics and triggers
+ * corresponding actions on the inverter.
+ * 
+ * @param topic The MQTT topic the message arrived on.
+ * @param payload The message payload.
+ * @param length Length of the payload.
+ */
 void callback(char* topic, byte* payload, unsigned int length) {
   char pl[10] = {0,};
   int ipl = 0 ;
@@ -47,6 +80,12 @@ void callback(char* topic, byte* payload, unsigned int length) {
   //Serial.println();
 }
 
+/**
+ * @brief Connects to WiFi and MQTT Broker.
+ * 
+ * Blocks until connection is established. Also resubscribes to
+ * control topics upon connection.
+ */
 void reconnect() {
 // Loop until we're reconnected
   while (!client.connected()) {
@@ -75,20 +114,20 @@ void reconnect() {
     if (client.connect(clientId.c_str(), mqtt_usr, mqtt_pwd)) {
       Serial.println("connected");
       // Once connected, publish an announcement...
-      client.publish("dups/rd/mv", "0");
-      client.publish("dups/rd/bv", "0");
-      client.publish("dups/rd/bp", "0");
-      client.publish("dups/rd/rl", "0");
-      client.publish("dups/rd/fcs", "0");
-      client.publish("dups/rd/apl", "0");
-      client.publish("dups/rd/ups", "0");
-      client.publish("dups/rd/tch", "0");
-      client.publish("dups/rd/bkt", "0");
-      client.publish("dups/rd/bks", "0");
-      client.publish("dups/rd/st", "0");
-      client.publish("dups/rd/als", "0");
-      client.publish("dups/rd/lc", "0");
-      client.publish("dups/rd/lp", "0");
+      client.publish("dups/rd/mv", "0");  ///< Mains Voltage
+      client.publish("dups/rd/bv", "0");  ///< Battery Voltage
+      client.publish("dups/rd/bp", "0");  ///< Battery Percentage
+      client.publish("dups/rd/rl", "0");  ///< Regulator Level
+      client.publish("dups/rd/fcs", "0"); ///< Force Cutoff Status
+      client.publish("dups/rd/apl", "0"); ///< Appliance Mode
+      client.publish("dups/rd/ups", "0"); ///< UPS Mode
+      client.publish("dups/rd/tch", "0"); ///< Turbo Charging
+      client.publish("dups/rd/bkt", "0"); ///< Backup Time
+      client.publish("dups/rd/bks", "0"); ///< Backup Since
+      client.publish("dups/rd/st", "0");  ///< System Temperature
+      client.publish("dups/rd/als", "0"); ///< Alarm Status
+      client.publish("dups/rd/lc", "0");  ///< Load Current
+      client.publish("dups/rd/lp", "0");  ///< Load Percentage
 
       // ... and resubscribe
       client.subscribe("dups/ctl/ipsw"); //Inverter Power Switch
@@ -108,6 +147,11 @@ void reconnect() {
   }
 }
 
+/**
+ * @brief Arduino Setup function.
+ * 
+ * Initializes Serial, WiFi, and attaches to the Inverter.
+ */
 void setup()
 {
   // Start Serial
@@ -130,6 +174,13 @@ void setup()
   client.setCallback(callback);
 }
 
+/**
+ * @brief Arduino Main Loop.
+ * 
+ * 1. Refreshes inverter data.
+ * 2. Publishes telemetry to MQTT.
+ * 3. Handles MQTT connection maintenance.
+ */
 void loop() {
   if (invctl.refresh () && client.connected()){
     snprintf (msg, 50, "%d", invctl.m_backupMode);

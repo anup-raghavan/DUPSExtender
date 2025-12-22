@@ -26,6 +26,16 @@ SOFTWARE.*/
 #include "internal.h"
 
 #define MIN(x,y) ((x)<(y)?(x):(y))
+/**
+ * @file dups.cpp
+ * @brief Implementation of the V-Guard DUPS Inverter Controller library.
+ */
+
+#include "Arduino.h"
+#include "dups.h"
+#include "internal.h"
+
+#define MIN(x,y) ((x)<(y)?(x):(y))
 #define REFRESH_INTERVAL    4000
 
 Inverter::Inverter(){
@@ -140,6 +150,19 @@ bool Inverter::init(){
     return true;
 }
 
+/**
+ * @brief Sends a command to the inverter via BLE.
+ * 
+ * Writes the command byte array to the TX characteristic and waits for a notification
+ * on the RX characteristic using a Semaphore.
+ * 
+ * @param cmd Command ID from the internal lookup table.
+ * @param log Whether to print debug logs.
+ * @param tout Timeout in ms.
+ * @param length Length of data to write.
+ * @return true If command succeeded.
+ * @return false If timeout occurred or invalid command.
+ */
 bool Inverter::sendCommand (int cmd, bool log, uint32_t tout, size_t length){
     if (cmd > CMD_MAX)
         return false;
@@ -178,6 +201,12 @@ void Inverter::onNotify(
     }
 }
 
+/**
+ * @brief Helper to dump hex data to Serial for debugging.
+ * 
+ * @param data Pointer to data buffer.
+ * @param length Length of data to print.
+ */
 void Inverter::hexDump (uint8_t *data, size_t length){
     if (NULL == data || length == 0)
         return ;
@@ -251,6 +280,14 @@ void Inverter::resetIHealValues(){
     alarmData.shortCircuit = 0;
 }
 
+/**
+ * @brief Calculates the battery percentage based on voltage curves.
+ * 
+ * Uses different calculation factors based on whether the system is charging or discharging,
+ * and the type of battery (Tubular vs Flat Plate).
+ * 
+ * Logic derived from reverse-engineering the official app.
+ */
 void Inverter::calculateBatteryPercent(){
     float f3;
     int i = m_batteryCount;
@@ -328,6 +365,13 @@ int Inverter::getMaskedBattPercentage (int percent) {
     return (percent < 0) ? 0 : ((percent > 100) ? 100 : percent);
 }
 
+/**
+ * @brief Estimates the remaining backup time.
+ * 
+ * Formula considers battery capacity, number of batteries, voltage drop, and current load.
+ * 
+ * @note Uses constants defined in dups.h for battery specifications.
+ */
 void Inverter::calculateBackupTime(){
     float f6;
     int i = BATTERY_CAPACITY_AH;
@@ -498,6 +542,14 @@ bool Inverter::readBackupModeStatus(){
     return ret;
 }
 
+/**
+ * @brief Reads and parses alarm flags from the inverter.
+ * 
+ * Decodes the bitmask returned by the inverter to set individual alarm statuses
+ * for overload, short circuit, low battery, etc.
+ * 
+ * @return true if successful.
+ */
 bool Inverter::readAlarmData(){
     bool ret = sendCommand (CMD_GET_BACKUP_MODE_STATUS) ;
     short alarmFlag ;
