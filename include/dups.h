@@ -35,6 +35,13 @@ SOFTWARE.*/
 #define STATUS_WATER_TOPPING_REQUIRED   0x0100
 #define STATUS_BATTERY_HIGH             0x0200
 
+#define BATTERY_CAPACITY_AH             150
+#define BATTERY_FULL_VOLTAGE_TUBULAR    12.8F
+#define BATTERY_FULL_VOLTAGE_FLAT       12.6F
+#define BATTERY_EMPTY_VOLTAGE           10.4F
+#define BATTERY_NOMINAL_VOLTAGE         12.0F
+#define BATTERY_BACKUP_CALC_THRESHOLD   12.2F
+
 struct __alarm_data{
     byte overloadCount;
     byte overTemperature;

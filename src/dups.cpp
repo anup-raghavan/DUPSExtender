@@ -258,12 +258,12 @@ void Inverter::calculateBatteryPercent(){
 
     float f2 = i;
     if (1 == m_batteryType){
-      f3 = 12.8F;
+      f3 = BATTERY_FULL_VOLTAGE_TUBULAR;
     } else {
-      f3 = 12.6F;
+      f3 = BATTERY_FULL_VOLTAGE_FLAT;
     } 
     float batteryLowChargeFactor = f3 * f2;
-    float batteryLowDischargeFactor = 10.4F * i;
+    float batteryLowDischargeFactor = BATTERY_EMPTY_VOLTAGE * i;
     float batteryFactor = (i * 14);
    
     //Serial.printf ("battery battype[%d] cnt[%d] discharging [%d] charging[%d]\r\n", m_batteryType, m_batteryCount, isDischarging, isCharging);
@@ -277,7 +277,7 @@ void Inverter::calculateBatteryPercent(){
         }
         if (f1 < batteryLowChargeFactor)
             f1 = batteryLowChargeFactor; 
-        int n = (int)(100.0F * ((f1 - batteryLowChargeFactor) / (batteryFactor - (f2 * 12.0F))));
+        int n = (int)(100.0F * ((f1 - batteryLowChargeFactor) / (batteryFactor - (f2 * BATTERY_NOMINAL_VOLTAGE))));
         if (isCharging) {
             int i2 = getMaskedBattPercentage(n);
             m_chargingPercent = i2;
@@ -302,7 +302,7 @@ void Inverter::calculateBatteryPercent(){
     if (f1 < batteryLowDischargeFactor)
         f1 = batteryLowDischargeFactor; 
     int j = m_loadPercent;
-    int k = (int)(100.0F * ((f1 - batteryLowDischargeFactor) / (batteryFactor - 0.007F * (float)j - ((float)i * 12.0F))));
+    int k = (int)(100.0F * ((f1 - batteryLowDischargeFactor) / (batteryFactor - 0.007F * (float)j - ((float)i * BATTERY_NOMINAL_VOLTAGE))));
     if (isDischarging) {
         int n = getMaskedBattPercentage(k);
         chargingPer = n;
@@ -330,14 +330,14 @@ int Inverter::getMaskedBattPercentage (int percent) {
 
 void Inverter::calculateBackupTime(){
     float f6;
-    int i = 150;
+    int i = BATTERY_CAPACITY_AH;
     int j = m_batteryCount;
     float f1 = 1.0F * i;
     float f2 = 15.0F * j;
-    float f3 = 12.2F * j;
+    float f3 = BATTERY_BACKUP_CALC_THRESHOLD * j;
     float f4 = 10.0F * j;
     float f5 = m_batteryVoltage;
-    if (f5 < 12.2F)
+    if (f5 < BATTERY_BACKUP_CALC_THRESHOLD)
       f1 = i - i / f2 * f4 * (f3 - f5); 
     int k = m_loadCurrent;
     if (k < 1) {
