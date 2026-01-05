@@ -1,19 +1,4 @@
 
-// Import required libraries
-#include <WiFi.h>
-#include "dups.h"
-#include "secret.h"
-#include "PubSubClient.h"
-
-#define DEVICE_NAME "DUPS-CONTROLLER"
-Inverter invctl;
-
-WiFiClient espClient;
-PubSubClient client(espClient);
-long lastMsg = 0;
-char msg[50];
-int value = 0;
-
 /**
  * @file main.cpp
  * @brief Entry point for DUPSExtender.

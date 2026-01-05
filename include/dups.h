@@ -13,8 +13,6 @@
 #ifndef __DUPS_H_
 #define __DUPS_H_
 
-/// @brief Overload alarm flag bitmask
-#define STATUS_OVERLOAD                 0x0000
 /// @brief Short circuit alarm flag bitmask
 #define STATUS_SHORT_CIRCUIT            0x0001
 /// @brief Low battery alarm flag bitmask
@@ -27,14 +25,14 @@
 #define STATUS_OVER_TEMPERATURE         0x0010
 /// @brief Feedback fail alarm flag bitmask
 #define STATUS_FEEDBACK_FAIL            0x0020
-/// @brief Battery charging alarm flag bitmask
-#define STATUS_BATTERY_CHARGING         0x0040
 /// @brief Battery charged alarm flag bitmask
-#define STATUS_BATTERY_CHARGED          0x0080
+#define STATUS_BATTERY_CHARGED          0x0040
 /// @brief Water topping required alarm flag bitmask
-#define STATUS_WATER_TOPPING_REQUIRED   0x0100
+#define STATUS_WATER_TOPPING_REQUIRED   0x0080
 /// @brief High battery voltage alarm flag bitmask
-#define STATUS_BATTERY_HIGH             0x0200
+#define STATUS_BATTERY_HIGH             0x0100
+/// @brief Overload alarm flag bitmask
+#define STATUS_OVERLOAD                 0x0200
 
 #define BATTERY_CAPACITY_AH             150
 #define BATTERY_FULL_VOLTAGE_TUBULAR    12.8F

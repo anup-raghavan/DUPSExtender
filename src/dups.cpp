@@ -21,11 +21,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.*/
 
-#include "Arduino.h"
-#include "dups.h"
-#include "internal.h"
 
-#define MIN(x,y) ((x)<(y)?(x):(y))
 /**
  * @file dups.cpp
  * @brief Implementation of the V-Guard DUPS Inverter Controller library.
@@ -604,16 +600,7 @@ bool Inverter::readAlarmData(){
     return ret;
 }
 
-#define STATUS_SHORT_CIRCUIT            0x0001
-#define STATUS_LOW_BATTERY              0x0002
-#define STATUS_MCB_TRIPPED              0x0004
-#define STATUS_FEEDBACK                 0x0008
-#define STATUS_OVER_TEMPERATURE         0x0010
-#define STATUS_FEEDBACK_FAIL            0x0020
-#define STATUS_BATTERY_CHARGED          0x0040
-#define STATUS_WATER_TOPPING_REQUIRED   0x0080
-#define STATUS_BATTERY_HIGH             0x0100
-#define STATUS_OVERLOAD                 0x0200
+
 
 void Inverter::updateStatus (short status){
     m_alarmStatus = ((status & 0x1) == 1) ? m_alarmStatus | STATUS_OVERLOAD : m_alarmStatus & ~(STATUS_OVERLOAD);
